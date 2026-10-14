@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Smart Disaster Management Portal{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+            <div class="card-custom p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <div style="font-size: 2.5rem;" class="mb-2">👤</div>
+                    <h2 class="h4 fw-bold">Citizen Account Registration</h2>
+                    <p class="text-secondary small mb-0">Create an account to report emergencies, track status, and view your history.</p>
+                </div>
+
+                <form method="POST" action="{{ url_for('auth.register') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="username" name="username" value="{{ username or '' }}" required placeholder="e.g. jdoe">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="full_name" class="form-label">Full Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="full_name" name="full_name" value="{{ full_name or '' }}" required placeholder="e.g. John Doe">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ email or '' }}" required placeholder="name@example.com">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="phone" class="form-label">Phone / Emergency Contact</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" value="{{ phone or '' }}" placeholder="+1-555-019-2834">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" id="password" name="password" required placeholder="At least 6 characters">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="confirm_password" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required placeholder="Repeat password">
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info py-2 px-3 small mt-3 mb-4" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-secondary);">
+                        <i class="bi bi-shield-check text-primary me-1"></i>
+                        <strong>Role Assurance:</strong> All new self-registrations default strictly to standard <code>user</code> roles. Administrative privileges cannot be self-assigned.
+                    </div>
+
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-primary-custom btn-lg">
+                            <i class="bi bi-check-circle me-1"></i> Complete Registration
+                        </button>
+                    </div>
+                </form>
+
+                <div class="text-center small mt-2 text-muted">
+                    Already registered? <a href="{{ url_for('auth.login') }}" class="fw-semibold">Sign in here</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

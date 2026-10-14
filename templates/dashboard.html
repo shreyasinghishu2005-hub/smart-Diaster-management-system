@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Citizen Dashboard - Smart Disaster Management{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+
+    <!-- Dashboard Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <h1 class="h3 fw-bold mb-0">Citizen Emergency Dashboard</h1>
+                <span class="badge bg-secondary">Citizen Portal</span>
+            </div>
+            <p class="text-secondary small mb-0">Track and monitor your filed emergency incidents in real-time.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('incidents.report_incident') }}" class="btn btn-danger-custom d-flex align-items-center gap-2">
+                <i class="bi bi-megaphone-fill"></i>
+                <span>Submit New Report</span>
+            </a>
+            <a href="{{ url_for('maps.view_map') }}" class="btn btn-outline-custom d-flex align-items-center gap-2">
+                <i class="bi bi-map"></i>
+                <span>Open Map</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Personal Metrics Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-value">{{ total_submitted }}</div>
+                    <div class="stat-label">My Submissions</div>
+                </div>
+                <div class="stat-icon text-primary" style="background-color: rgba(37, 99, 235, 0.1);">
+                    <i class="bi bi-file-earmark-text"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-value text-warning">{{ pending_count }}</div>
+                    <div class="stat-label">Pending / Under Review</div>
+                </div>
+                <div class="stat-icon text-warning" style="background-color: rgba(217, 119, 6, 0.1);">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-value text-info">{{ in_progress_count }}</div>
+                    <div class="stat-label">In Active Response</div>
+                </div>
+                <div class="stat-icon text-info" style="background-color: rgba(6, 182, 212, 0.1);">
+                    <i class="bi bi-truck"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-value text-success">{{ resolved_count }}</div>
+                    <div class="stat-label">Resolved / Closed</div>
+                </div>
+                <div class="stat-icon text-success" style="background-color: rgba(22, 163, 74, 0.1);">
+                    <i class="bi bi-check2-circle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Incident Reports Table -->
+    <div class="card-custom mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h2 class="h5 fw-bold mb-0">My Recent Incident Reports</h2>
+                <p class="small text-muted mb-0">Showing your latest emergency submissions and current status updates.</p>
+            </div>
+            {% if recent_submissions %}
+            <a href="{{ url_for('user.my_reports') }}" class="btn btn-sm btn-outline-custom">View All Reports &rarr;</a>
+            {% endif %}
+        </div>
+
+        {% if recent_submissions %}
+        <div class="table-responsive">
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th>Report ID</th>
+                        <th>Incident Title</th>
+                        <th>Category</th>
+                        <th>Assigned Priority</th>
+                        <th>Response Status</th>
+                        <th>Location</th>
+                        <th>Date &amp; Time</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inc in recent_submissions %}
+                    <tr>
+                        <td class="fw-bold">#{{ inc.id }}</td>
+                        <td>
+                            <strong>{{ inc.title }}</strong>
+                            {% if inc.assigned_team %}
+                            <div class="small text-muted"><i class="bi bi-shield-check text-primary"></i> Team: {{ inc.assigned_team }}</div>
+                            {% endif %}
+                        </td>
+                        <td><span class="badge bg-secondary">{{ inc.disaster_type }}</span></td>
+                        <td>
+                            <span class="badge badge-priority {{ inc.badge_class }}">{{ inc.priority }}</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-status {{ inc.status_badge_class }}">{{ inc.status }}</span>
+                        </td>
+                        <td class="small text-muted"><i class="bi bi-geo-alt"></i> {{ inc.location_name }}</td>
+                        <td class="small text-muted">{{ inc.created_at|timeago }}</td>
+                        <td>
+                            <a href="{{ url_for('incidents.view_incident', incident_id=inc.id) }}" class="btn btn-sm btn-outline-custom">
+                                View Details &rarr;
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <div style="font-size: 3rem;" class="mb-2">📋</div>
+            <h5 class="fw-bold">No Emergency Incidents Reported Yet</h5>
+            <p class="text-secondary small mb-3">You have not submitted any emergency incident reports from this account.</p>
+            <a href="{{ url_for('incidents.report_incident') }}" class="btn btn-danger-custom">
+                <i class="bi bi-plus-circle me-1"></i> Submit An Incident Report
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Quick Emergency Guidelines Card -->
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="card-custom h-100">
+                <h5 class="fw-bold mb-2"><i class="bi bi-info-circle-fill text-primary me-2"></i>How Priority Classification Works</h5>
+                <p class="small text-secondary mb-2">
+                    When you submit an emergency report, our rule engine parses the incident category, casualty indicators, structural collapses, and danger keywords.
+                </p>
+                <div class="d-flex flex-wrap gap-2 small">
+                    <span class="badge badge-priority badge-priority-critical">Critical: Immediate life danger</span>
+                    <span class="badge badge-priority badge-priority-high">High: Severe injury / spreading</span>
+                    <span class="badge badge-priority badge-priority-medium">Medium: Property hazard</span>
+                    <span class="badge badge-priority badge-priority-low">Low: Contained / minor</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card-custom h-100">
+                <h5 class="fw-bold mb-2"><i class="bi bi-geo-alt-fill text-danger me-2"></i>Nearby Facility Discovery</h5>
+                <p class="small text-secondary mb-2">
+                    Each incident dynamically computes distances to nearby hospitals, fire stations, and emergency relief shelters using Haversine calculation and OpenStreetMap.
+                </p>
+                <a href="{{ url_for('maps.view_map') }}" class="small fw-semibold">Open Full Incident &amp; Facility Map &rarr;</a>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

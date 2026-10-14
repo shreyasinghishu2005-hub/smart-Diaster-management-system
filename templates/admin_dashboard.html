@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}Emergency Operations Command - Administrator Dashboard{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+
+    <!-- Admin Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <h1 class="h3 fw-bold mb-0">Emergency Operations Command Dashboard</h1>
+                <span class="badge bg-danger">Admin Command</span>
+            </div>
+            <p class="text-secondary small mb-0">Centralized emergency surveillance, automated priority triage overview, and resource coordination.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('admin.manage_incidents') }}" class="btn btn-outline-custom d-flex align-items-center gap-2">
+                <i class="bi bi-list-check"></i>
+                <span>Manage All Incidents</span>
+            </a>
+            <a href="{{ url_for('maps.view_map') }}" class="btn btn-primary-custom d-flex align-items-center gap-2">
+                <i class="bi bi-map"></i>
+                <span>Incident Response Map</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI Metric Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-2">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-value">{{ total_incidents }}</div>
+                    <div class="stat-label">Total Reports</div>
+                </div>
+                <div class="stat-icon text-primary" style="background-color: rgba(37, 99, 235, 0.1);">
+                    <i class="bi bi-folder2-open"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-2">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-value text-danger">{{ critical_count }}</div>
+                    <div class="stat-label">Critical Priority</div>
+                </div>
+                <div class="stat-icon text-danger" style="background-color: rgba(220, 38, 38, 0.1);">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-2">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-value text-warning">{{ high_count }}</div>
+                    <div class="stat-label">High Priority</div>
+                </div>
+                <div class="stat-icon text-warning" style="background-color: rgba(234, 88, 12, 0.1);">
+                    <i class="bi bi-lightning-charge"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-2">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-value" style="color: #D97706;">{{ pending_total }}</div>
+                    <div class="stat-label">Pending Review</div>
+                </div>
+                <div class="stat-icon" style="background-color: rgba(217, 119, 6, 0.1); color: #D97706;">
+                    <i class="bi bi-hourglass-top"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-2">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-value text-info">{{ in_progress_count }}</div>
+                    <div class="stat-label">In Progress</div>
+                </div>
+                <div class="stat-icon text-info" style="background-color: rgba(6, 182, 212, 0.1);">
+                    <i class="bi bi-truck"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-2">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-value text-success">{{ resolved_total }}</div>
+                    <div class="stat-label">Resolved / Closed</div>
+                </div>
+                <div class="stat-icon text-success" style="background-color: rgba(22, 163, 74, 0.1);">
+                    <i class="bi bi-check2-circle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Breakdown Analytics -->
+    <div class="row g-3 mb-4">
+        <!-- Disaster Category Distribution -->
+        <div class="col-lg-7">
+            <div class="card-custom h-100">
+                <h5 class="fw-bold mb-3"><i class="bi bi-bar-chart-fill text-primary me-2"></i>Incidents by Disaster Category</h5>
+                <div class="row g-2">
+                    {% for cat, count in type_counts.items() %}
+                    <div class="col-sm-6 col-md-4">
+                        <div class="p-3 rounded-3" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color);">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="small fw-semibold">{{ cat }}</span>
+                                <span class="badge bg-secondary">{{ count }}</span>
+                            </div>
+                            <div class="progress" style="height: 6px; background-color: var(--border-color);">
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ (count / (total_incidents or 1) * 100)|round }}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Priority Breakdown -->
+        <div class="col-lg-5">
+            <div class="card-custom h-100">
+                <h5 class="fw-bold mb-3"><i class="bi bi-pie-chart-fill text-danger me-2"></i>Priority Distribution</h5>
+                <div class="d-flex flex-column gap-2">
+                    <div class="d-flex justify-content-between align-items-center p-2 rounded" style="background-color: var(--priority-critical-bg); color: var(--priority-critical-text);">
+                        <span class="fw-bold"><i class="bi bi-circle-fill text-danger me-2"></i> Critical Priority</span>
+                        <span class="badge badge-priority badge-priority-critical">{{ critical_count }} reports</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center p-2 rounded" style="background-color: var(--priority-high-bg); color: var(--priority-high-text);">
+                        <span class="fw-bold"><i class="bi bi-circle-fill text-warning me-2"></i> High Priority</span>
+                        <span class="badge badge-priority badge-priority-high">{{ high_count }} reports</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center p-2 rounded" style="background-color: var(--priority-medium-bg); color: var(--priority-medium-text);">
+                        <span class="fw-bold"><i class="bi bi-circle-fill me-2" style="color: #D97706;"></i> Medium Priority</span>
+                        <span class="badge badge-priority badge-priority-medium">{{ medium_count }} reports</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center p-2 rounded" style="background-color: var(--priority-low-bg); color: var(--priority-low-text);">
+                        <span class="fw-bold"><i class="bi bi-circle-fill text-success me-2"></i> Low Priority</span>
+                        <span class="badge badge-priority badge-priority-low">{{ low_count }} reports</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Emergency Incident Reports -->
+    <div class="card-custom">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h2 class="h5 fw-bold mb-0">Active Incident Feed &amp; Response Registry</h2>
+                <p class="small text-muted mb-0">Live stream of incoming emergency reports with administrative action buttons.</p>
+            </div>
+            <a href="{{ url_for('admin.manage_incidents') }}" class="btn btn-sm btn-outline-custom">View All &amp; Filter &rarr;</a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Incident Title</th>
+                        <th>Category</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Reporter &amp; Callback</th>
+                        <th>Location</th>
+                        <th>Dispatched Team</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inc in recent_incidents %}
+                    <tr>
+                        <td class="fw-bold">#{{ inc.id }}</td>
+                        <td>
+                            <strong>{{ inc.title }}</strong>
+                        </td>
+                        <td><span class="badge bg-secondary">{{ inc.disaster_type }}</span></td>
+                        <td>
+                            <span class="badge badge-priority {{ inc.badge_class }}">{{ inc.priority }}</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-status {{ inc.status_badge_class }}">{{ inc.status }}</span>
+                        </td>
+                        <td class="small">
+                            <div>{{ inc.reporter_name }}</div>
+                            <div class="text-muted"><i class="bi bi-telephone"></i> {{ inc.contact_number }}</div>
+                        </td>
+                        <td class="small text-muted"><i class="bi bi-geo-alt"></i> {{ inc.location_name }}</td>
+                        <td class="small">
+                            {% if inc.assigned_team %}
+                            <span class="text-primary fw-semibold">{{ inc.assigned_team }}</span>
+                            {% else %}
+                            <span class="text-muted">Unassigned</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('admin.admin_incident_detail', incident_id=inc.id) }}" class="btn btn-sm btn-outline-custom">
+                                <i class="bi bi-gear me-1"></i> Manage
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

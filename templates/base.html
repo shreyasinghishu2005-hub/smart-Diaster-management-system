@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Smart Disaster Management & Emergency Response System{% endblock %}</title>
+
+    <!-- Theme Initialization Script (Prevents flash of unstyled content) -->
+    <script>
+        (function() {
+            try {
+                var savedTheme = localStorage.getItem('sdm_theme_preference');
+                if (savedTheme === 'dark' || savedTheme === 'light') {
+                    document.documentElement.setAttribute('data-theme', savedTheme);
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                }
+            } catch (e) {}
+        })();
+    </script>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Leaflet.js CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Application Custom Theme Stylesheet (Light Default + Dark Mode) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Academic Prototype Banner Notice -->
+    <div class="academic-disclaimer-banner" role="alert">
+        <i class="bi bi-shield-exclamation text-danger"></i>
+        <span><strong>ACADEMIC PROTOTYPE ONLY:</strong> This system is a simulated college engineering prototype and is <strong>not</strong> connected to official emergency services. In a real emergency, call <strong>112</strong> or <strong>911</strong> immediately.</span>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('user.index') }}">
+                <span style="font-size: 1.4rem;">🚨</span>
+                <span>SmartRescue</span>
+                <span class="brand-badge">Academic Prototype</span>
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarMain">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'user.index' %}active{% endif %}" href="{{ url_for('user.index') }}">
+                            <i class="bi bi-house-door me-1"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'maps.view_map' %}active{% endif %}" href="{{ url_for('maps.view_map') }}">
+                            <i class="bi bi-map me-1"></i> Live Map
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-danger fw-bold {% if request.endpoint == 'incidents.report_incident' %}active{% endif %}" href="{{ url_for('incidents.report_incident') }}">
+                            <i class="bi bi-megaphone-fill me-1"></i> Report Emergency
+                        </a>
+                    </li>
+                    {% if current_user %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'user.dashboard' %}active{% endif %}" href="{{ url_for('user.dashboard') }}">
+                            <i class="bi bi-speedometer2 me-1"></i> My Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'user.my_reports' %}active{% endif %}" href="{{ url_for('user.my_reports') }}">
+                            <i class="bi bi-journal-text me-1"></i> My Reports
+                        </a>
+                    </li>
+                    {% if current_user.is_admin %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-primary fw-semibold {% if 'admin' in request.endpoint %}active{% endif %}" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-shield-lock-fill me-1"></i> Admin Console
+                        </a>
+                        <ul class="dropdown-menu shadow-sm" aria-labelledby="adminDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('admin.admin_dashboard') }}"><i class="bi bi-graph-up me-2"></i> Operations Dashboard</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.manage_incidents') }}"><i class="bi bi-list-check me-2"></i> Manage All Incidents</a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                    {% endif %}
+                </ul>
+
+                <!-- Right Side Controls: Hotline, Theme Toggle, Auth -->
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <!-- Real Emergency Quick Hotline -->
+                    <a href="tel:112" class="btn-emergency-hotline" title="Call Official Emergency Services">
+                        <i class="bi bi-telephone-fill"></i>
+                        <span>Helpline: 112 / 911</span>
+                    </a>
+
+                    <!-- Theme Toggle Button (Light / Dark) -->
+                    <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle light or dark theme" title="Toggle theme">
+                        <i class="bi bi-moon-stars-fill text-secondary me-1"></i>
+                        <span class="d-none d-sm-inline">Dark</span>
+                    </button>
+
+                    <!-- Authentication / User Menu -->
+                    {% if current_user %}
+                    <div class="dropdown">
+                        <button class="btn btn-outline-custom dropdown-toggle d-flex align-items-center gap-1" type="button" id="userMenuBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle"></i>
+                            <span class="d-none d-md-inline">{{ current_user.full_name }}</span>
+                            {% if current_user.is_admin %}
+                            <span class="badge bg-danger ms-1">Admin</span>
+                            {% endif %}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="userMenuBtn">
+                            <li><h6 class="dropdown-header">{{ current_user.email }}</h6></li>
+                            <li><a class="dropdown-item" href="{{ url_for('user.dashboard') }}"><i class="bi bi-speedometer2 me-2"></i> Citizen Dashboard</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('user.my_reports') }}"><i class="bi bi-journal-text me-2"></i> My Reports</a></li>
+                            {% if current_user.is_admin %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger fw-semibold" href="{{ url_for('admin.admin_dashboard') }}"><i class="bi bi-shield-lock me-2"></i> Admin Console</a></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right me-2"></i> Log Out</a></li>
+                        </ul>
+                    </div>
+                    {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-custom">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Log In
+                    </a>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary-custom">
+                        <i class="bi bi-person-plus me-1"></i> Register
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages Container -->
+    <div class="container mt-3">
+        <div id="clientAlertContainer"></div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show alert-custom" role="alert">
+                        {% if category == 'success' %}
+                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                        {% elif category == 'danger' %}
+                            <i class="bi bi-exclamation-triangle-fill text-danger fs-5"></i>
+                        {% elif category == 'warning' %}
+                            <i class="bi bi-exclamation-circle-fill text-warning fs-5"></i>
+                        {% else %}
+                            <i class="bi bi-info-circle-fill text-info fs-5"></i>
+                        {% endif %}
+                        <div class="flex-grow-1">{{ message }}</div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Page Content -->
+    <main class="py-3">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer-custom">
+        <div class="container">
+            <div class="row align-items-center gy-3">
+                <div class="col-md-6 text-center text-md-start">
+                    <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-2 mb-1">
+                        <span style="font-size: 1.2rem;">🚨</span>
+                        <strong class="text-primary">Smart Disaster Management & Emergency Response System</strong>
+                    </div>
+                    <p class="small text-muted mb-0">
+                        Final Year College Engineering Prototype &copy; {{ now_year }}. Developed for simulation, academic presentation, and disaster response evaluation.
+                    </p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <p class="small text-muted mb-1">
+                        Built with Python, Flask, SQLite, Bootstrap 5, and Leaflet.js
+                    </p>
+                    <div class="d-flex justify-content-center justify-content-md-end gap-3 small">
+                        <a href="{{ url_for('user.index') }}">Home</a>
+                        <a href="{{ url_for('maps.view_map') }}">Interactive Map</a>
+                        <a href="{{ url_for('incidents.report_incident') }}">Report Incident</a>
+                        {% if not current_user %}
+                        <a href="{{ url_for('auth.login') }}">Admin / User Login</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Leaflet.js JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Application Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/map.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

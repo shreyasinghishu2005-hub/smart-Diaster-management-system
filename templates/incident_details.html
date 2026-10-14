@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}Incident #{{ incident.id }} - {{ incident.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+
+    <!-- Breadcrumb & Header -->
+    <div class="mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1 small">
+                {% if is_admin %}
+                <li class="breadcrumb-item"><a href="{{ url_for('admin.admin_dashboard') }}">Admin Console</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('admin.manage_incidents') }}">All Incidents</a></li>
+                {% else %}
+                <li class="breadcrumb-item"><a href="{{ url_for('user.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('user.my_reports') }}">My Reports</a></li>
+                {% endif %}
+                <li class="breadcrumb-item active" aria-current="page">Incident #{{ incident.id }}</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge bg-secondary">{{ incident.disaster_type }}</span>
+                    <span class="badge badge-priority {{ incident.badge_class }}">{{ incident.priority }} Priority</span>
+                    <span class="badge badge-status {{ incident.status_badge_class }}">{{ incident.status }}</span>
+                    <span class="text-muted small">#{{ incident.id }}</span>
+                </div>
+                <h1 class="h3 fw-bold mb-0">{{ incident.title }}</h1>
+            </div>
+
+            <div class="d-flex gap-2">
+                {% if is_admin %}
+                <a href="{{ url_for('admin.admin_incident_detail', incident_id=incident.id) }}" class="btn btn-danger-custom d-flex align-items-center gap-2">
+                    <i class="bi bi-gear-wide-connected"></i>
+                    <span>Manage / Dispatch Response</span>
+                </a>
+                {% endif %}
+                <a href="{{ url_for('maps.view_map') }}" class="btn btn-outline-custom d-flex align-items-center gap-2">
+                    <i class="bi bi-map"></i>
+                    <span>View on Full Map</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left Column: Incident Description, Photo, Rule Engine Triage, Audit Trail -->
+        <div class="col-lg-7">
+            <!-- Details Card -->
+            <div class="card-custom mb-4">
+                <h5 class="fw-bold mb-3 border-bottom pb-2"><i class="bi bi-card-text text-primary me-2"></i>Incident Overview</h5>
+                
+                <p class="mb-3" style="font-size: 1.05rem; white-space: pre-line;">{{ incident.description }}</p>
+
+                {% if incident.image_filename %}
+                <div class="mb-3">
+                    <h6 class="fw-bold small text-muted mb-2">Attached Scene Photograph:</h6>
+                    <img src="{{ url_for('static', filename='uploads/' + incident.image_filename) }}" alt="Scene Photograph" class="img-fluid rounded border shadow-sm" style="max-height: 400px; width: 100%; object-fit: cover;">
+                </div>
+                {% endif %}
+
+                <div class="row g-2 pt-2 border-top small text-secondary">
+                    <div class="col-sm-6">
+                        <strong><i class="bi bi-person me-1"></i> Reporter:</strong> {{ incident.reporter_name }}
+                    </div>
+                    <div class="col-sm-6">
+                        <strong><i class="bi bi-telephone me-1"></i> Contact:</strong> {{ incident.contact_number }}
+                    </div>
+                    <div class="col-sm-6">
+                        <strong><i class="bi bi-clock me-1"></i> Incident Time:</strong> {{ incident.incident_datetime|timeago }}
+                    </div>
+                    <div class="col-sm-6">
+                        <strong><i class="bi bi-shield-check text-primary me-1"></i> Dispatched Unit:</strong>
+                        {{ incident.assigned_team or 'None assigned yet' }}
+                    </div>
+                </div>
+
+                {% if incident.resolution_notes %}
+                <div class="mt-3 p-3 rounded-3" style="background-color: var(--priority-low-bg); border: 1px solid var(--priority-low-border); color: var(--priority-low-text);">
+                    <h6 class="fw-bold mb-1"><i class="bi bi-check-circle-fill me-1"></i> Official Resolution Details:</h6>
+                    <p class="mb-0 small">{{ incident.resolution_notes }}</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Automatic Priority Classification Breakdown Panel -->
+            <div class="card-custom mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-cpu text-primary me-2"></i>Priority Classification Analysis</h5>
+                    <span class="badge badge-priority {{ incident.badge_class }}">{{ incident.priority }}</span>
+                </div>
+                <p class="small text-muted mb-3">
+                    Triage classification computed automatically via our configurable rule engine upon submission.
+                </p>
+
+                <!-- Score Meter -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between small fw-bold mb-1">
+                        <span>Calculated Severity Score:</span>
+                        <span>{{ incident.priority_score }} / 100</span>
+                    </div>
+                    <div class="progress" style="height: 10px; background-color: var(--border-color);">
+                        <div class="progress-bar {% if incident.priority == 'Critical' %}bg-danger{% elif incident.priority == 'High' %}bg-warning{% elif incident.priority == 'Medium' %}bg-info{% else %}bg-success{% endif %}" role="progressbar" style="width: {{ incident.priority_score }}%;" aria-valuenow="{{ incident.priority_score }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+
+                <!-- Explanation Reasons List -->
+                <h6 class="small fw-bold text-secondary mb-2">Rule Evaluation Breakdown:</h6>
+                <ul class="list-group list-group-flush small mb-3">
+                    {% for reason in incident.reasons_list %}
+                    <li class="list-group-item bg-transparent px-0 py-1 text-secondary">
+                        <i class="bi bi-arrow-right-short text-primary"></i> {{ reason }}
+                    </li>
+                    {% endfor %}
+                </ul>
+
+                <!-- Academic Machine Learning Comparison Prototype -->
+                {% if ml_prediction and ml_prediction.available %}
+                <div class="p-3 rounded-3" style="background-color: var(--bg-secondary); border: 1px dashed var(--border-color);">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <span class="small fw-bold text-primary"><i class="bi bi-robot me-1"></i> Future Enhancement: Scikit-Learn ML Model Demo</span>
+                        <span class="badge bg-primary">{{ ml_prediction.prediction }}</span>
+                    </div>
+                    <p class="small text-muted mb-1">
+                        Experimental natural language severity prediction using <code>{{ ml_prediction.model }}</code>.
+                    </p>
+                    <div class="small text-secondary">
+                        <strong>Confidence:</strong> {{ ml_prediction.confidence }}% &bull; Matches rule engine:
+                        {% if ml_prediction.prediction == incident.priority %}
+                        <span class="text-success fw-bold"><i class="bi bi-check2"></i> Yes</span>
+                        {% else %}
+                        <span class="text-warning fw-bold"><i class="bi bi-exclamation-circle"></i> Variation (Advisory)</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Chronological Lifecycle Audit Trail -->
+            <div class="card-custom">
+                <h5 class="fw-bold mb-3 border-bottom pb-2"><i class="bi bi-clock-history text-primary me-2"></i>Incident Response History</h5>
+                
+                {% if incident.history %}
+                <div class="timeline">
+                    {% for entry in incident.history %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <strong class="small">{{ entry.action }}</strong>
+                                <span class="small text-muted">{{ entry.timestamp|timeago }}</span>
+                            </div>
+                            <p class="small text-secondary mb-1">{{ entry.notes or 'No notes provided' }}</p>
+                            <div class="small text-muted">
+                                <i class="bi bi-person"></i> Logged by: <strong>{{ entry.changed_by_name }}</strong>
+                                {% if entry.new_status %}
+                                &bull; Status: <span class="badge bg-secondary">{{ entry.new_status }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="small text-muted mb-0">No response actions logged yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Column: Location Map & Nearby Facilities -->
+        <div class="col-lg-5">
+            <!-- Location & Ground Zero Map -->
+            <div class="card-custom mb-4">
+                <h5 class="fw-bold mb-2"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Ground Zero Location</h5>
+                <p class="small text-secondary mb-2"><strong>Landmark:</strong> {{ incident.location_name }}</p>
+                <p class="small text-muted mb-3"><strong>GPS:</strong> {{ incident.latitude|round(6) }}, {{ incident.longitude|round(6) }}</p>
+
+                <!-- Centered Leaflet Map -->
+                <div id="detailMap" class="mb-3"></div>
+            </div>
+
+            <!-- Nearby Emergency Resources (Hospitals, Fire Stations, Police) -->
+            <div class="card-custom">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-hospital-fill text-primary me-1"></i>Nearby Emergency Responders</h5>
+                    <span class="badge bg-secondary">{{ nearby_resources|length }} Facilities</span>
+                </div>
+                <p class="small text-muted mb-3">
+                    Calculated using Haversine distance formula &amp; OpenStreetMap emergency infrastructure within 15 km.
+                </p>
+
+                {% if nearby_resources %}
+                <div class="d-flex flex-column gap-3">
+                    {% for res in nearby_resources %}
+                    <div class="p-3 rounded-3" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color);">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <div>
+                                <span class="badge {% if res.resource_type == 'Hospital' %}bg-primary{% elif res.resource_type == 'Fire Station' %}bg-danger{% elif res.resource_type == 'Police Station' %}bg-dark{% else %}bg-success{% endif %} mb-1">
+                                    {{ res.resource_type }}
+                                </span>
+                                <h6 class="fw-bold mb-0">{{ res.name }}</h6>
+                            </div>
+                            <span class="badge bg-light text-dark border fw-bold">{{ res.distance_km }} km</span>
+                        </div>
+                        <p class="small text-muted mb-1"><i class="bi bi-geo-alt"></i> {{ res.address }}</p>
+                        <div class="d-flex justify-content-between align-items-center small mt-2 pt-2 border-top">
+                            <span class="text-secondary"><i class="bi bi-telephone"></i> {{ res.phone }}</span>
+                            <span class="text-muted small"><em>{{ res.source }}</em></span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="small text-muted mb-0">No verified emergency facilities found within 15 km of this coordinate.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const lat = {{ incident.latitude }};
+        const lng = {{ incident.longitude }};
+        const title = {{ incident.title|tojson }};
+        const priority = {{ incident.priority|tojson }};
+        const disasterType = {{ incident.disaster_type|tojson }};
+        const resources = {{ nearby_resources|tojson }};
+
+        EmergencyMapManager.initDetailMap("detailMap", lat, lng, title, priority, disasterType, resources);
+    });
+</script>
+{% endblock %}

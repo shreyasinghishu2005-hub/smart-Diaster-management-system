@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Incidents - Admin Command Console{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+
+    <!-- Header & Breadcrumbs -->
+    <div class="mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1 small">
+                <li class="breadcrumb-item"><a href="{{ url_for('admin.admin_dashboard') }}">Admin Console</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Incident Directory</li>
+            </ol>
+        </nav>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <h1 class="h3 fw-bold mb-0">Emergency Incident Management</h1>
+                <p class="text-secondary small mb-0">Filter, search, audit, and dispatch emergency response teams.</p>
+            </div>
+            <div>
+                <span class="badge bg-secondary fs-6">{{ total_matched }} Incidents Found</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search & Filter Controls Card -->
+    <div class="card-custom mb-4 p-3">
+        <form method="GET" action="{{ url_for('admin.manage_incidents') }}">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label for="q" class="form-label small mb-1">Search Keywords</label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control form-control-sm" id="q" name="q" value="{{ search_q }}" placeholder="Search title, description, reporter, location...">
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-2">
+                    <label for="type" class="form-label small mb-1">Category</label>
+                    <select class="form-select form-select-sm" id="type" name="type">
+                        <option value="All" {% if not filter_type or filter_type == 'All' %}selected{% endif %}>All Categories</option>
+                        <option value="Flood" {% if filter_type == 'Flood' %}selected{% endif %}>Flood</option>
+                        <option value="Fire" {% if filter_type == 'Fire' %}selected{% endif %}>Fire</option>
+                        <option value="Earthquake" {% if filter_type == 'Earthquake' %}selected{% endif %}>Earthquake</option>
+                        <option value="Road Accident" {% if filter_type == 'Road Accident' %}selected{% endif %}>Road Accident</option>
+                        <option value="Medical Emergency" {% if filter_type == 'Medical Emergency' %}selected{% endif %}>Medical Emergency</option>
+                        <option value="Other" {% if filter_type == 'Other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+
+                <div class="col-6 col-md-2">
+                    <label for="priority" class="form-label small mb-1">Priority</label>
+                    <select class="form-select form-select-sm" id="priority" name="priority">
+                        <option value="All" {% if not filter_priority or filter_priority == 'All' %}selected{% endif %}>All Priorities</option>
+                        <option value="Critical" {% if filter_priority == 'Critical' %}selected{% endif %}>Critical</option>
+                        <option value="High" {% if filter_priority == 'High' %}selected{% endif %}>High</option>
+                        <option value="Medium" {% if filter_priority == 'Medium' %}selected{% endif %}>Medium</option>
+                        <option value="Low" {% if filter_priority == 'Low' %}selected{% endif %}>Low</option>
+                    </select>
+                </div>
+
+                <div class="col-6 col-md-2">
+                    <label for="status" class="form-label small mb-1">Status</label>
+                    <select class="form-select form-select-sm" id="status" name="status">
+                        <option value="All" {% if not filter_status or filter_status == 'All' %}selected{% endif %}>All Statuses</option>
+                        <option value="Reported" {% if filter_status == 'Reported' %}selected{% endif %}>Reported</option>
+                        <option value="Under Review" {% if filter_status == 'Under Review' %}selected{% endif %}>Under Review</option>
+                        <option value="Response in Progress" {% if filter_status == 'Response in Progress' %}selected{% endif %}>Response in Progress</option>
+                        <option value="Resolved" {% if filter_status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                        <option value="Closed" {% if filter_status == 'Closed' %}selected{% endif %}>Closed</option>
+                    </select>
+                </div>
+
+                <div class="col-6 col-md-2 d-flex gap-1">
+                    <button type="submit" class="btn btn-sm btn-primary-custom flex-grow-1">
+                        <i class="bi bi-funnel-fill me-1"></i> Filter
+                    </button>
+                    <a href="{{ url_for('admin.manage_incidents') }}" class="btn btn-sm btn-outline-custom" title="Reset Filters">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Incidents Table Card -->
+    <div class="card-custom">
+        {% if incidents %}
+        <div class="table-responsive">
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Incident Headline</th>
+                        <th>Category</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Reporter Contact</th>
+                        <th>Location Landmark</th>
+                        <th>Dispatched Unit</th>
+                        <th>Reported</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inc in incidents %}
+                    <tr>
+                        <td class="fw-bold">#{{ inc.id }}</td>
+                        <td>
+                            <strong>{{ inc.title }}</strong>
+                            {% if inc.image_filename %}
+                            <span class="badge bg-light text-dark border ms-1"><i class="bi bi-camera"></i></span>
+                            {% endif %}
+                            <div class="small text-muted text-truncate" style="max-width: 250px;">
+                                {{ inc.description }}
+                            </div>
+                        </td>
+                        <td><span class="badge bg-secondary">{{ inc.disaster_type }}</span></td>
+                        <td>
+                            <span class="badge badge-priority {{ inc.badge_class }}">{{ inc.priority }}</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-status {{ inc.status_badge_class }}">{{ inc.status }}</span>
+                        </td>
+                        <td class="small">
+                            <div>{{ inc.reporter_name }}</div>
+                            <div class="text-muted"><i class="bi bi-telephone"></i> {{ inc.contact_number }}</div>
+                        </td>
+                        <td class="small text-muted"><i class="bi bi-geo-alt"></i> {{ inc.location_name }}</td>
+                        <td class="small">
+                            {% if inc.assigned_team %}
+                            <span class="text-primary fw-semibold">{{ inc.assigned_team }}</span>
+                            {% else %}
+                            <span class="text-muted">Unassigned</span>
+                            {% endif %}
+                        </td>
+                        <td class="small text-muted">{{ inc.created_at|timeago }}</td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <a href="{{ url_for('admin.admin_incident_detail', incident_id=inc.id) }}" class="btn btn-sm btn-outline-custom" title="Manage & Dispatch">
+                                    <i class="bi bi-gear-wide-connected"></i>
+                                </a>
+                                <a href="{{ url_for('incidents.view_incident', incident_id=inc.id) }}" class="btn btn-sm btn-outline-custom" title="View Full Report">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <div style="font-size: 3rem;" class="mb-2">🔍</div>
+            <h5 class="fw-bold">No Matching Emergency Reports Found</h5>
+            <p class="text-secondary small mb-3">Try adjusting your search criteria or resetting filters.</p>
+            <a href="{{ url_for('admin.manage_incidents') }}" class="btn btn-outline-custom">
+                <i class="bi bi-arrow-counterclockwise me-1"></i> Reset All Filters
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

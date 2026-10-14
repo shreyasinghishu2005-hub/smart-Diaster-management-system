@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}My Emergency Reports - Smart Disaster Management{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1 small">
+                    <li class="breadcrumb-item"><a href="{{ url_for('user.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">My Reports</li>
+                </ol>
+            </nav>
+            <h1 class="h3 fw-bold mb-0">My Submitted Emergency Reports</h1>
+            <p class="text-secondary small mb-0">Complete historical log of all emergency reports submitted by your account.</p>
+        </div>
+        <div>
+            <a href="{{ url_for('incidents.report_incident') }}" class="btn btn-danger-custom d-flex align-items-center gap-2">
+                <i class="bi bi-megaphone-fill"></i>
+                <span>File New Report</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="card-custom">
+        {% if reports %}
+        <div class="table-responsive">
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Incident Title</th>
+                        <th>Category</th>
+                        <th>Assigned Priority</th>
+                        <th>Status</th>
+                        <th>Location Landmark</th>
+                        <th>Reported Date</th>
+                        <th>Assigned Team</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inc in reports %}
+                    <tr>
+                        <td class="fw-bold">#{{ inc.id }}</td>
+                        <td>
+                            <strong>{{ inc.title }}</strong>
+                            {% if inc.image_filename %}
+                            <span class="badge bg-light text-dark border ms-1"><i class="bi bi-camera"></i> Photo</span>
+                            {% endif %}
+                        </td>
+                        <td><span class="badge bg-secondary">{{ inc.disaster_type }}</span></td>
+                        <td>
+                            <span class="badge badge-priority {{ inc.badge_class }}">{{ inc.priority }}</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-status {{ inc.status_badge_class }}">{{ inc.status }}</span>
+                        </td>
+                        <td class="small text-muted"><i class="bi bi-geo-alt"></i> {{ inc.location_name }}</td>
+                        <td class="small text-muted">{{ inc.created_at|timeago }}</td>
+                        <td class="small">
+                            {% if inc.assigned_team %}
+                            <span class="text-primary fw-semibold"><i class="bi bi-shield-check"></i> {{ inc.assigned_team }}</span>
+                            {% else %}
+                            <span class="text-muted">Awaiting Dispatch</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('incidents.view_incident', incident_id=inc.id) }}" class="btn btn-sm btn-outline-custom">
+                                View Details &rarr;
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <div style="font-size: 3rem;" class="mb-2">📋</div>
+            <h5 class="fw-bold">No Emergency Reports Recorded</h5>
+            <p class="text-secondary small mb-3">You have not submitted any emergency incidents yet.</p>
+            <a href="{{ url_for('incidents.report_incident') }}" class="btn btn-danger-custom">
+                <i class="bi bi-megaphone-fill me-1"></i> Submit An Emergency Report
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

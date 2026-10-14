@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Access Denied (403) - Smart Disaster Management{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+    <div style="font-size: 4rem;" class="mb-3">🔒</div>
+    <h1 class="display-5 fw-bold mb-2">403 - Access Forbidden</h1>
+    <p class="text-secondary lead mb-4">You do not possess the required security credentials to access this administrative portal or incident record.</p>
+    <a href="{{ url_for('user.index') }}" class="btn btn-primary-custom">
+        <i class="bi bi-house-door me-1"></i> Return to Homepage
+    </a>
+</div>
+{% endblock %}

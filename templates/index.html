@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Smart Disaster Management & Emergency Response System{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+
+    <!-- Hero Section -->
+    <div class="card-custom mb-4 p-4 p-md-5 text-center text-md-start">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-8">
+                <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-3" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color);">
+                    <span class="text-danger fw-bold">● LIVE DEMO</span>
+                    <span class="text-muted small">Academic Emergency Response Prototype</span>
+                </div>
+                <h1 class="display-6 fw-bold mb-3" style="line-height: 1.25;">
+                    Smart Disaster Management &amp; Rapid Emergency Response System
+                </h1>
+                <p class="lead text-secondary mb-4" style="font-size: 1.08rem;">
+                    A centralized web-based platform allowing citizens to report emergencies in real-time, automatically classify incident priority via a transparent triage engine, locate nearby medical and rescue resources on an interactive map, and empower disaster response administrators to track incidents from report to resolution.
+                </p>
+                <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
+                    <a href="{{ url_for('incidents.report_incident') }}" class="btn btn-danger-custom btn-lg d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-megaphone-fill"></i>
+                        <span>Report Emergency Incident</span>
+                    </a>
+                    <a href="{{ url_for('maps.view_map') }}" class="btn btn-outline-custom btn-lg d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-map-fill text-primary"></i>
+                        <span>Interactive Emergency Map</span>
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-4 text-center">
+                <div class="p-3 rounded-3" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color);">
+                    <div style="font-size: 3rem;" class="mb-2">🛡️</div>
+                    <h5 class="fw-bold mb-1">Official Emergency Services</h5>
+                    <p class="small text-muted mb-3">For real-world life-threatening situations, dial directly:</p>
+                    <div class="d-grid gap-2">
+                        <a href="tel:112" class="btn btn-sm btn-outline-danger text-start px-3 py-2 d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-telephone-fill me-2"></i> National Emergency</span>
+                            <strong>112 / 911</strong>
+                        </a>
+                        <a href="tel:101" class="btn btn-sm btn-outline-custom text-start px-3 py-2 d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-fire me-2 text-danger"></i> Fire &amp; Rescue</span>
+                            <strong>101</strong>
+                        </a>
+                        <a href="tel:108" class="btn btn-sm btn-outline-custom text-start px-3 py-2 d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-hospital me-2 text-primary"></i> Medical Ambulance</span>
+                            <strong>102 / 108</strong>
+                        </a>
+                        <a href="tel:100" class="btn btn-sm btn-outline-custom text-start px-3 py-2 d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-shield-fill me-2 text-dark"></i> Police Assistance</span>
+                            <strong>100</strong>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live System Metrics -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-value">{{ total_incidents }}</div>
+                    <div class="stat-label">Total Reports Filed</div>
+                </div>
+                <div class="stat-icon text-primary" style="background-color: rgba(37, 99, 235, 0.1);">
+                    <i class="bi bi-file-earmark-medical"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-value text-danger">{{ active_incidents }}</div>
+                <div class="stat-label">Active Emergencies</div>
+                <div class="stat-icon text-danger" style="background-color: rgba(220, 38, 38, 0.1);">
+                    <i class="bi bi-exclamation-octagon"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-value text-success">{{ resolved_incidents }}</div>
+                <div class="stat-label">Resolved / Closed</div>
+                <div class="stat-icon text-success" style="background-color: rgba(22, 163, 74, 0.1);">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-value text-info">{{ active_facilities }}</div>
+                <div class="stat-label">Emergency Facilities</div>
+                <div class="stat-icon text-info" style="background-color: rgba(6, 182, 212, 0.1);">
+                    <i class="bi bi-geo-alt"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supported Incident Categories -->
+    <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h3 class="h5 fw-bold mb-0">Supported Emergency Categories</h3>
+                <p class="small text-muted mb-0">Select a category to report or discover nearby responders.</p>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="card-custom text-center p-3 h-100">
+                    <div style="font-size: 2rem;" class="mb-2">🌊</div>
+                    <h6 class="fw-bold mb-1">Floods</h6>
+                    <p class="small text-muted mb-0">Flash floods, water logging, dam breaches</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="card-custom text-center p-3 h-100">
+                    <div style="font-size: 2rem;" class="mb-2">🔥</div>
+                    <h6 class="fw-bold mb-1">Fires</h6>
+                    <p class="small text-muted mb-0">Structural fires, wildland, chemical smoke</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="card-custom text-center p-3 h-100">
+                    <div style="font-size: 2rem;" class="mb-2">🌋</div>
+                    <h6 class="fw-bold mb-1">Earthquakes</h6>
+                    <p class="small text-muted mb-0">Seismic tremors, building cracks, debris</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="card-custom text-center p-3 h-100">
+                    <div style="font-size: 2rem;" class="mb-2">🚗</div>
+                    <h6 class="fw-bold mb-1">Road Accidents</h6>
+                    <p class="small text-muted mb-0">Vehicle collisions, highway pileups</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="card-custom text-center p-3 h-100">
+                    <div style="font-size: 2rem;" class="mb-2">🏥</div>
+                    <h6 class="fw-bold mb-1">Medical</h6>
+                    <p class="small text-muted mb-0">Cardiac arrests, severe injuries, trauma</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="card-custom text-center p-3 h-100">
+                    <div style="font-size: 2rem;" class="mb-2">⚠️</div>
+                    <h6 class="fw-bold mb-1">Other Hazards</h6>
+                    <p class="small text-muted mb-0">Fallen trees, gas leaks, power outages</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- How the Platform Works -->
+    <div class="card-custom mb-4 p-4">
+        <h3 class="h5 fw-bold mb-3">System Architecture &amp; Workflow</h3>
+        <div class="row g-4 text-center">
+            <div class="col-md-3">
+                <div class="p-3 rounded-3" style="background-color: var(--bg-secondary);">
+                    <div class="fw-bold text-primary mb-2" style="font-size: 1.5rem;">1</div>
+                    <h6 class="fw-bold mb-1">Incident Reporting</h6>
+                    <p class="small text-muted mb-0">Citizens pin GPS location on Leaflet map, submit description, and optional scene photos.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 rounded-3" style="background-color: var(--bg-secondary);">
+                    <div class="fw-bold text-primary mb-2" style="font-size: 1.5rem;">2</div>
+                    <h6 class="fw-bold mb-1">Rule-Based Triage</h6>
+                    <p class="small text-muted mb-0">Transparent rule engine analyzes disaster type and critical hazard keywords into Critical, High, Med, or Low priority.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 rounded-3" style="background-color: var(--bg-secondary);">
+                    <div class="fw-bold text-primary mb-2" style="font-size: 1.5rem;">3</div>
+                    <h6 class="fw-bold mb-1">Resource Discovery</h6>
+                    <p class="small text-muted mb-0">Automated Haversine proximity calculates nearest hospitals, fire stations, and shelters with OpenStreetMap fallback.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 rounded-3" style="background-color: var(--bg-secondary);">
+                    <div class="fw-bold text-primary mb-2" style="font-size: 1.5rem;">4</div>
+                    <h6 class="fw-bold mb-1">Dispatch &amp; Resolution</h6>
+                    <p class="small text-muted mb-0">Administrators dispatch responder teams, log chronological audit logs, and record resolution outcomes.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Public Activity Preview -->
+    {% if recent_incidents %}
+    <div class="card-custom">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="h5 fw-bold mb-0">Recent Public Incident Alerts</h3>
+            <a href="{{ url_for('maps.view_map') }}" class="small">Explore on Map &rarr;</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Emergency Incident</th>
+                        <th>Category</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Location</th>
+                        <th>Reported</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inc in recent_incidents %}
+                    <tr>
+                        <td class="fw-bold">#{{ inc.id }}</td>
+                        <td>
+                            <strong>{{ inc.title }}</strong>
+                        </td>
+                        <td><span class="badge bg-secondary">{{ inc.disaster_type }}</span></td>
+                        <td>
+                            <span class="badge badge-priority {{ inc.badge_class }}">{{ inc.priority }}</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-status {{ inc.status_badge_class }}">{{ inc.status }}</span>
+                        </td>
+                        <td class="text-muted small"><i class="bi bi-geo-alt"></i> {{ inc.location_name }}</td>
+                        <td class="text-muted small">{{ inc.created_at|timeago }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

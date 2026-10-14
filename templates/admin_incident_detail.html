@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}Incident Command Center #{{ incident.id }} - Admin Management{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+
+    <!-- Header & Navigation -->
+    <div class="mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1 small">
+                <li class="breadcrumb-item"><a href="{{ url_for('admin.admin_dashboard') }}">Admin Console</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('admin.manage_incidents') }}">Incidents Directory</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Manage Incident #{{ incident.id }}</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge bg-secondary">{{ incident.disaster_type }}</span>
+                    <span class="badge badge-priority {{ incident.badge_class }}">{{ incident.priority }} Priority</span>
+                    <span class="badge badge-status {{ incident.status_badge_class }}">{{ incident.status }}</span>
+                    <span class="text-muted small">Incident #{{ incident.id }}</span>
+                </div>
+                <h1 class="h3 fw-bold mb-0">{{ incident.title }}</h1>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('incidents.view_incident', incident_id=incident.id) }}" class="btn btn-outline-custom">
+                    <i class="bi bi-eye me-1"></i> Public Report View
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left Column: Incident Dossier, Map, Nearby Resources -->
+        <div class="col-lg-6">
+            <!-- Incident Dossier Card -->
+            <div class="card-custom mb-4">
+                <h5 class="fw-bold mb-3 border-bottom pb-2"><i class="bi bi-journal-medical text-primary me-2"></i>Incident Dossier</h5>
+                
+                <p class="mb-3" style="font-size: 1.05rem; white-space: pre-line;">{{ incident.description }}</p>
+
+                {% if incident.image_filename %}
+                <div class="mb-3">
+                    <h6 class="fw-bold small text-muted mb-2">Scene Photo:</h6>
+                    <img src="{{ url_for('static', filename='uploads/' + incident.image_filename) }}" alt="Scene Photograph" class="img-fluid rounded border shadow-sm" style="max-height: 280px; width: 100%; object-fit: cover;">
+                </div>
+                {% endif %}
+
+                <div class="row g-2 pt-2 border-top small text-secondary">
+                    <div class="col-sm-6">
+                        <strong><i class="bi bi-person me-1"></i> Reporter:</strong> {{ incident.reporter_name }}
+                    </div>
+                    <div class="col-sm-6">
+                        <strong><i class="bi bi-telephone me-1"></i> Callback Phone:</strong> {{ incident.contact_number }}
+                    </div>
+                    <div class="col-sm-6">
+                        <strong><i class="bi bi-clock me-1"></i> Reported At:</strong> {{ incident.created_at|timeago }}
+                    </div>
+                    <div class="col-sm-6">
+                        <strong><i class="bi bi-shield-check text-primary me-1"></i> Assigned Unit:</strong>
+                        {{ incident.assigned_team or 'Unassigned' }}
+                    </div>
+                    <div class="col-12">
+                        <strong><i class="bi bi-geo-alt text-danger me-1"></i> Landmark Location:</strong> {{ incident.location_name }}
+                    </div>
+                </div>
+
+                {% if incident.resolution_notes %}
+                <div class="mt-3 p-3 rounded-3" style="background-color: var(--priority-low-bg); border: 1px solid var(--priority-low-border); color: var(--priority-low-text);">
+                    <h6 class="fw-bold mb-1"><i class="bi bi-check-circle-fill me-1"></i> Current Resolution Record:</h6>
+                    <p class="mb-0 small">{{ incident.resolution_notes }}</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Centered Map -->
+            <div class="card-custom mb-4">
+                <h5 class="fw-bold mb-2"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Incident Coordinates</h5>
+                <p class="small text-muted mb-3">GPS: {{ incident.latitude|round(6) }}, {{ incident.longitude|round(6) }}</p>
+                <div id="adminDetailMap" style="height: 300px; border-radius: 8px;"></div>
+            </div>
+
+            <!-- Proximity Resources -->
+            <div class="card-custom">
+                <h5 class="fw-bold mb-2"><i class="bi bi-hospital text-primary me-1"></i>Available Responders within 15 km</h5>
+                {% if nearby_resources %}
+                <div class="d-flex flex-column gap-2 small">
+                    {% for res in nearby_resources[:5] %}
+                    <div class="p-2 rounded border d-flex justify-content-between align-items-center" style="background-color: var(--bg-secondary);">
+                        <div>
+                            <strong>{{ res.name }}</strong> ({{ res.resource_type }})
+                            <div class="text-muted">{{ res.phone }}</div>
+                        </div>
+                        <span class="badge bg-light text-dark border">{{ res.distance_km }} km</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="small text-muted mb-0">No facilities registered in immediate proximity.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Column: Administrative Operations & Dispatch Forms -->
+        <div class="col-lg-6">
+            <!-- 1. Lifecycle Status Control Form -->
+            <div class="card-custom mb-4">
+                <h5 class="fw-bold mb-3 border-bottom pb-2"><i class="bi bi-arrow-repeat text-primary me-2"></i>1. Update Incident Response Status</h5>
+                <form method="POST" action="{{ url_for('admin.admin_incident_detail', incident_id=incident.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <input type="hidden" name="action_type" value="update_status"/>
+
+                    <div class="mb-3">
+                        <label for="new_status" class="form-label">Response Lifecycle Status</label>
+                        <select class="form-select" id="new_status" name="new_status" required>
+                            <option value="Reported" {% if incident.status == 'Reported' %}selected{% endif %}>Reported (Initial citizen filing)</option>
+                            <option value="Under Review" {% if incident.status == 'Under Review' %}selected{% endif %}>Under Review (Assessing validity &amp; requirements)</option>
+                            <option value="Response in Progress" {% if incident.status == 'Response in Progress' %}selected{% endif %}>Response in Progress (Responders dispatched / on scene)</option>
+                            <option value="Resolved" {% if incident.status == 'Resolved' %}selected{% endif %}>Resolved (Hazard mitigated / victims secured)</option>
+                            <option value="Closed" {% if incident.status == 'Closed' %}selected{% endif %}>Closed (Post-incident review complete)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="status_notes" class="form-label">Status Update Audit Note</label>
+                        <input type="text" class="form-control" id="status_notes" name="status_notes" placeholder="e.g. Verified with highway surveillance cameras. Escalating to dispatch.">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-custom w-100">
+                        <i class="bi bi-check-circle me-1"></i> Apply Status Change
+                    </button>
+                </form>
+            </div>
+
+            <!-- 2. Priority Override Control Form -->
+            <div class="card-custom mb-4">
+                <h5 class="fw-bold mb-3 border-bottom pb-2"><i class="bi bi-exclamation-triangle text-warning me-2"></i>2. Adjust Priority Severity (Manual Override)</h5>
+                <form method="POST" action="{{ url_for('admin.admin_incident_detail', incident_id=incident.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <input type="hidden" name="action_type" value="adjust_priority"/>
+
+                    <div class="mb-3">
+                        <label for="new_priority" class="form-label">Adjusted Priority Level</label>
+                        <select class="form-select" id="new_priority" name="new_priority" required>
+                            <option value="Critical" {% if incident.priority == 'Critical' %}selected{% endif %}>Critical Priority (Immediate Threat to Life)</option>
+                            <option value="High" {% if incident.priority == 'High' %}selected{% endif %}>High Priority (Spreading Hazard / Severe Injury)</option>
+                            <option value="Medium" {% if incident.priority == 'Medium' %}selected{% endif %}>Medium Priority (Property Damage / Traffic Block)</option>
+                            <option value="Low" {% if incident.priority == 'Low' %}selected{% endif %}>Low Priority (Contained / Minor Hazard)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="priority_reason" class="form-label">Mandatory Priority Justification <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="priority_reason" name="priority_reason" rows="2" required placeholder="State operational reason for adjusting rule-engine priority..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-outline-custom w-100">
+                        <i class="bi bi-shield-lock me-1"></i> Confirm Priority Adjustment
+                    </button>
+                </form>
+            </div>
+
+            <!-- 3. Dispatch / Assign Emergency Unit Form -->
+            <div class="card-custom mb-4">
+                <h5 class="fw-bold mb-3 border-bottom pb-2"><i class="bi bi-truck text-danger me-2"></i>3. Dispatch &amp; Assign Emergency Responders</h5>
+                <form method="POST" action="{{ url_for('admin.admin_incident_detail', incident_id=incident.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <input type="hidden" name="action_type" value="assign_team"/>
+
+                    <div class="mb-3">
+                        <label for="team_name" class="form-label">Response Unit / Team Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="team_name" name="team_name" value="{{ incident.assigned_team or '' }}" required placeholder="e.g. Station 4 Heavy HazMat Unit or Trauma Care Rapid Paramedic 2">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="instructions" class="form-label">Tactical Dispatch Instructions</label>
+                        <textarea class="form-control" id="instructions" name="instructions" rows="2" placeholder="e.g. Approach from North Avenue to avoid floodwater. Wear protective respirators."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-danger-custom w-100">
+                        <i class="bi bi-send-fill me-1"></i> Dispatch Responders to Ground Zero
+                    </button>
+                </form>
+            </div>
+
+            <!-- 4. Resolution Recording Form -->
+            <div class="card-custom mb-4">
+                <h5 class="fw-bold mb-3 border-bottom pb-2"><i class="bi bi-check2-circle text-success me-2"></i>4. Record Final Resolution Details</h5>
+                <form method="POST" action="{{ url_for('admin.admin_incident_detail', incident_id=incident.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <input type="hidden" name="action_type" value="record_resolution"/>
+
+                    <div class="mb-3">
+                        <label for="resolution_notes" class="form-label">Resolution Summary <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="resolution_notes" name="resolution_notes" rows="3" required placeholder="Detail the mitigation actions taken, casualty status, facilities involved, and concluding remarks...">{{ incident.resolution_notes or '' }}</textarea>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="close_incident" name="close_incident" value="1" {% if incident.status == 'Closed' %}checked{% endif %}>
+                        <label class="form-check-label small" for="close_incident">
+                            Formally close this incident record upon resolution (Mark as <strong>Closed</strong>)
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 text-white fw-semibold">
+                        <i class="bi bi-archive me-1"></i> Log Official Resolution Record
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chronological Audit Trail Section -->
+    <div class="card-custom mt-2">
+        <h5 class="fw-bold mb-3 border-bottom pb-2"><i class="bi bi-clock-history text-primary me-2"></i>Full Operational Audit Log</h5>
+        
+        {% if incident.history %}
+        <div class="timeline">
+            {% for entry in incident.history %}
+            <div class="timeline-item">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <strong>{{ entry.action }}</strong>
+                        <span class="small text-muted">{{ entry.timestamp|timeago }}</span>
+                    </div>
+                    <p class="small text-secondary mb-1">{{ entry.notes }}</p>
+                    <div class="small text-muted">
+                        <i class="bi bi-person-fill"></i> Authorized Actor: <strong>{{ entry.changed_by_name }}</strong>
+                        {% if entry.previous_status and entry.new_status %}
+                        &bull; Status Transition: <span class="badge bg-secondary">{{ entry.previous_status }} &rarr; {{ entry.new_status }}</span>
+                        {% endif %}
+                        {% if entry.previous_priority and entry.new_priority %}
+                        &bull; Priority Transition: <span class="badge bg-warning text-dark">{{ entry.previous_priority }} &rarr; {{ entry.new_priority }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="small text-muted mb-0">No history records logged yet.</p>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const lat = {{ incident.latitude }};
+        const lng = {{ incident.longitude }};
+        const title = {{ incident.title|tojson }};
+        const priority = {{ incident.priority|tojson }};
+        const disasterType = {{ incident.disaster_type|tojson }};
+        const resources = {{ nearby_resources|tojson }};
+
+        EmergencyMapManager.initDetailMap("adminDetailMap", lat, lng, title, priority, disasterType, resources);
+    });
+</script>
+{% endblock %}
