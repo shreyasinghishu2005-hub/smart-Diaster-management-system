@@ -258,7 +258,22 @@ tests/test_priority.py::test_scikit_learn_ml_classifier_prediction PASSED
 
 ---
 
-## 8. Running and Debugging in VS Code
+## 8. Deploying to Render (Free Cloud Hosting)
+
+The application includes native support for deploying to **Render**:
+
+### Method 1: Automatic Render Deployment via Procfile / Blueprint
+1. Go to your [Render Dashboard](https://dashboard.render.com/).
+2. Click **New +** &rarr; **Web Service**.
+3. Connect your GitHub repository: `https://github.com/shreyasinghishu2005-hub/smart-Diaster-management-system`.
+4. Configure the service settings:
+   - **Environment:** `Python 3`
+   - **Build Command:** `pip install -r requirements.txt`
+   - **Start Command:** `gunicorn app:app --bind 0.0.0.0:$PORT`
+     *(Note: If Render has prefilled `uvicorn server.main:app --app-dir . --host 0.0.0.0 --port $PORT`, that will also run smoothly via the included ASGI bridge!)*
+5. Click **Create Web Service**. Render will install the dependencies, initialize the database automatically on startup, and provide your public live HTTPS URL!
+
+---
 
 1. Open the project folder in VS Code:
    ```bash

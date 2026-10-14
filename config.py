@@ -16,12 +16,15 @@ class Config:
         "SECRET_KEY", "smart-disaster-mgmt-dev-key-academic-prototype-2026-xyz"
     )
 
-    # SQLite database inside the instance directory
+    # SQLite database inside the instance directory (or PostgreSQL if DATABASE_URL is set on Render)
     INSTANCE_DIR = BASE_DIR / "instance"
     INSTANCE_DIR.mkdir(parents=True, exist_ok=True)
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
+    _db_url = os.environ.get(
         "DATABASE_URL", f"sqlite:///{INSTANCE_DIR / 'disaster_management.db'}"
     )
+    if _db_url and _db_url.startswith("postgres://"):
+        _db_url = _db_url.replace("postgres://", "postgresql://", 1)
+    SQLALCHEMY_DATABASE_URI = _db_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # File uploads
