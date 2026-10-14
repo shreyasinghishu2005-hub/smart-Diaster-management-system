@@ -16,9 +16,20 @@ class Config:
         "SECRET_KEY", "smart-disaster-mgmt-dev-key-academic-prototype-2026-xyz"
     )
 
-    # SQLite database inside the instance directory (or PostgreSQL if DATABASE_URL is set on Render)
-    INSTANCE_DIR = BASE_DIR / "instance"
+    # Detect Vercel serverless environment (requires /tmp for writable SQLite and uploads)
+    IS_VERCEL = bool(os.environ.get("VERCEL"))
+
+    if IS_VERCEL:
+        INSTANCE_DIR = Path("/tmp") / "instance"
+        UPLOAD_FOLDER = Path("/tmp") / "uploads"
+    else:
+        INSTANCE_DIR = BASE_DIR / "instance"
+        UPLOAD_FOLDER = BASE_DIR / "static" / "uploads"
+
     INSTANCE_DIR.mkdir(parents=True, exist_ok=True)
+    UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
+
+    # SQLite database inside instance directory (or PostgreSQL if DATABASE_URL is set)
     _db_url = os.environ.get(
         "DATABASE_URL", f"sqlite:///{INSTANCE_DIR / 'disaster_management.db'}"
     )
@@ -27,9 +38,7 @@ class Config:
     SQLALCHEMY_DATABASE_URI = _db_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    # File uploads
-    UPLOAD_FOLDER = BASE_DIR / "static" / "uploads"
-    UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
+    # File uploads limit and allowed extensions
     MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5 Megabytes limit
     ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
 

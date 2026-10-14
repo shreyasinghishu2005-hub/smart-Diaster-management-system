@@ -40,6 +40,12 @@ def create_app(config_class=Config):
     app.register_blueprint(admin_bp)
     app.register_blueprint(maps_bp)
 
+    # Route to serve uploads from UPLOAD_FOLDER (handles local, Render, and Vercel /tmp)
+    @app.route("/static/uploads/<path:filename>")
+    def uploaded_file(filename):
+        from flask import send_from_directory
+        return send_from_directory(str(app.config["UPLOAD_FOLDER"]), filename)
+
     # Inject context processors for templates
     @app.context_processor
     def inject_global_template_vars():
