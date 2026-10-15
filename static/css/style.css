@@ -726,3 +726,319 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
         font-size: 1.5rem;
     }
 }
+
+/* 15. Subtle glass surfaces and phone-friendly controls */
+:root {
+    --glass-surface: rgba(255, 255, 255, 0.78);
+    --glass-surface-strong: rgba(255, 255, 255, 0.92);
+    --glass-input: rgba(255, 255, 255, 0.82);
+    --glass-border: rgba(255, 255, 255, 0.9);
+    --glass-shadow: 0 10px 30px rgba(15, 23, 42, 0.07);
+    --page-glow-blue: rgba(37, 99, 235, 0.08);
+    --page-glow-cyan: rgba(14, 165, 233, 0.06);
+    --nav-bg: rgba(255, 255, 255, 0.82);
+    --nav-border: rgba(148, 163, 184, 0.22);
+}
+
+[data-theme="dark"] {
+    --glass-surface: rgba(30, 30, 30, 0.78);
+    --glass-surface-strong: rgba(30, 30, 30, 0.94);
+    --glass-input: rgba(37, 37, 37, 0.88);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 12px 32px rgba(0, 0, 0, 0.24);
+    --page-glow-blue: rgba(37, 99, 235, 0.16);
+    --page-glow-cyan: rgba(14, 165, 233, 0.1);
+    --nav-bg: rgba(26, 26, 26, 0.84);
+    --nav-border: rgba(255, 255, 255, 0.1);
+}
+
+body {
+    background-image:
+        radial-gradient(ellipse at 8% 0%, var(--page-glow-blue), transparent 42rem),
+        radial-gradient(ellipse at 94% 8%, var(--page-glow-cyan), transparent 34rem);
+    background-repeat: no-repeat;
+}
+
+.navbar-custom {
+    -webkit-backdrop-filter: blur(16px) saturate(145%);
+    backdrop-filter: blur(16px) saturate(145%);
+}
+
+.card-custom,
+.stat-card,
+.dropdown-menu,
+.modal-content,
+.timeline-content {
+    background-color: var(--glass-surface);
+    border-color: var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    backdrop-filter: blur(14px) saturate(140%);
+}
+
+.dropdown-menu,
+.modal-content {
+    background-color: var(--glass-surface-strong);
+}
+
+.form-control,
+.form-select,
+.input-group-text {
+    background-color: var(--glass-input);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: var(--glass-surface-strong);
+}
+
+.leaflet-container {
+    border-radius: 14px;
+    z-index: 0;
+}
+
+.table-responsive {
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+}
+
+img,
+video,
+canvas {
+    max-width: 100%;
+}
+
+@media (max-width: 991.98px) {
+    .navbar-custom {
+        padding: 0.65rem 0.85rem;
+    }
+
+    .navbar-custom .container-fluid {
+        padding-right: 0;
+        padding-left: 0;
+    }
+
+    .navbar-custom .navbar-collapse {
+        max-height: calc(100vh - 5rem);
+        max-height: calc(100dvh - 5rem);
+        overflow-y: auto;
+        padding-top: 0.75rem;
+    }
+
+    .navbar-custom .navbar-nav .nav-link {
+        display: flex;
+        align-items: center;
+        min-height: 44px;
+    }
+
+    .navbar-custom .navbar-collapse > .d-flex {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: stretch !important;
+        gap: 0.5rem !important;
+        padding: 0.5rem 0 0.75rem;
+    }
+
+    .navbar-custom .navbar-collapse > .d-flex > .btn-emergency-hotline {
+        grid-column: 1 / -1;
+        justify-content: center;
+        min-height: 44px;
+    }
+
+    .navbar-custom .navbar-collapse > .d-flex > .dropdown,
+    .navbar-custom .navbar-collapse > .d-flex > .dropdown > .btn,
+    .navbar-custom .navbar-collapse > .d-flex > a.btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 767.98px) {
+    html,
+    body {
+        min-width: 320px;
+        overflow-x: hidden;
+    }
+
+    main {
+        padding-top: 0.25rem;
+    }
+
+    .container,
+    .container-fluid {
+        min-width: 0;
+    }
+
+    .row > * {
+        min-width: 0;
+    }
+
+    .academic-disclaimer-banner {
+        align-items: flex-start;
+        padding: 0.55rem 0.8rem;
+        font-size: 0.76rem;
+        line-height: 1.45;
+        text-align: left;
+    }
+
+    .academic-disclaimer-banner i {
+        flex: 0 0 auto;
+        margin-top: 0.1rem;
+    }
+
+    .card-custom {
+        border-radius: 16px;
+        padding: 1rem;
+    }
+
+    .stat-card {
+        min-height: 96px;
+        gap: 0.45rem;
+        padding: 0.8rem;
+        border-radius: 14px;
+    }
+
+    .stat-card .stat-value {
+        font-size: 1.35rem;
+        overflow-wrap: anywhere;
+    }
+
+    .stat-card .stat-label {
+        font-size: 0.7rem;
+        line-height: 1.35;
+        letter-spacing: 0.02em;
+    }
+
+    .stat-card .stat-icon {
+        width: 38px;
+        height: 38px;
+        flex: 0 0 38px;
+        border-radius: 11px;
+        font-size: 1.15rem;
+    }
+
+    .display-6 {
+        font-size: clamp(1.8rem, 7.5vw, 2.25rem);
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    p,
+    td,
+    th,
+    label {
+        overflow-wrap: anywhere;
+    }
+
+    .btn,
+    .theme-toggle-btn,
+    .btn-emergency-hotline {
+        min-height: 44px;
+    }
+
+    .form-control,
+    .form-select {
+        min-height: 46px;
+        font-size: 16px;
+    }
+
+    textarea.form-control {
+        min-height: 120px;
+    }
+
+    .table-custom {
+        min-width: 42rem;
+    }
+
+    .map-sidebar-container {
+        height: auto;
+        max-height: 52vh;
+        overflow-y: auto;
+    }
+
+    #incidentMap,
+    #reportMap,
+    #detailMap,
+    #adminDetailMap {
+        height: clamp(280px, 48vh, 380px) !important;
+    }
+
+    .card-custom.sticky-top {
+        position: static !important;
+        top: auto !important;
+    }
+
+    .footer-custom {
+        padding: 1.25rem 0.75rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .navbar-brand {
+        gap: 0.35rem;
+        font-size: 1.05rem;
+    }
+
+    .navbar-brand .brand-badge {
+        font-size: 0.55rem;
+        letter-spacing: 0.02em;
+        padding: 0.18rem 0.35rem;
+    }
+
+    .card-custom .btn-lg {
+        width: 100%;
+        justify-content: center;
+        white-space: normal;
+    }
+
+    .container {
+        padding-right: 0.85rem;
+        padding-left: 0.85rem;
+    }
+}
+
+@media (max-width: 380px) {
+    .navbar-brand .brand-badge {
+        display: none;
+    }
+
+    .stat-card .stat-icon {
+        width: 32px;
+        height: 32px;
+        flex-basis: 32px;
+        font-size: 1rem;
+    }
+
+    .stat-card {
+        padding: 0.7rem;
+    }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+    .navbar-custom,
+    .card-custom,
+    .stat-card,
+    .dropdown-menu,
+    .modal-content,
+    .timeline-content,
+    .form-control,
+    .form-select,
+    .input-group-text {
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+    }
+
+    .card-custom,
+    .stat-card,
+    .dropdown-menu,
+    .modal-content,
+    .timeline-content {
+        background-color: var(--bg-card);
+    }
+}
